@@ -1,5 +1,7 @@
 package org.example;
-
+import java.util.ArrayList;
+import java.util.List;
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 public class LWECrypto {
@@ -111,9 +113,77 @@ public class LWECrypto {
             return 1;
         }
     }
+    /**
+     * CHIFFREMENT D'UNE PHRASE : Convertit le texte en bits et chiffre chaque bit.
+     */
+    public List<LWECipherText> encryptString(String text, LWEKeyPair.PublicKey pk) {
+        List<LWECipherText> encryptedMessage = new ArrayList<>();
 
-    // --- LE TEST ULTIME POUR LE JURY ---
+        // Convertit le texte en tableau d'octets (bytes)
+        byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
+
+        for (byte b : bytes) {
+            // Pour chaque octet, on extrait ses 8 bits (de gauche à droite)
+            for (int i = 7; i >= 0; i--) {
+                int bit = (b >> i) & 1; // Opération binaire pour lire le bit
+                encryptedMessage.add(encryptBit(bit, pk));
+            }
+        }
+        return encryptedMessage;
+    }
+
+    /**
+     * DÉCHIFFREMENT D'UNE PHRASE : Déchiffre les bits et les réassemble en texte.
+     */
+    public String decryptString(List<LWECipherText> cipherTexts, LWEKeyPair.PrivateKey sk) {
+        int numOfBytes = cipherTexts.size() / 8;
+        byte[] decryptedBytes = new byte[numOfBytes];
+
+        int bitIndex = 0;
+        for (int i = 0; i < numOfBytes; i++) {
+            byte b = 0;
+            // On reconstruit l'octet bit par bit
+            for (int j = 7; j >= 0; j--) {
+                int bit = decryptBit(cipherTexts.get(bitIndex), sk);
+                b = (byte) (b | (bit << j)); // Opération binaire pour écrire le bit
+                bitIndex++;
+            }
+            decryptedBytes[i] = b;
+        }
+        return new String(decryptedBytes, StandardCharsets.UTF_8);
+    }
     public static void main(String[] args) {
+        LWECrypto crypto = new LWECrypto();
+
+        System.out.println("--- 1. GÉNÉRATION DES CLÉS ---");
+        LWEKeyPair keys = crypto.generateKeyPair();
+        System.out.println("Clés générées.");
+
+        System.out.println("\n--- 2. TEST DE CHIFFREMENT DE TEXTE ---");
+        String phraseOriginale = "Bonjour Mesdames et Messieurs, je suis autodidacte en mathématiques approfondies.";
+        System.out.println("Message clair : \"" + phraseOriginale + "\"");
+
+        long startTime = System.currentTimeMillis();
+        List<LWECipherText> texteChiffre = crypto.encryptString(phraseOriginale, keys.publicKey);
+        long endTime = System.currentTimeMillis();
+
+        System.out.println("Message chiffré ! Le texte a été transformé en " + texteChiffre.size() + " équations matricielles.");
+        System.out.println("Temps de chiffrement : " + (endTime - startTime) + " ms");
+
+        // Affichons juste à quoi ressemble la première lettre chiffrée pour prouver que c'est illisible
+        System.out.println("Aperçu du premier bit chiffré : v=" + texteChiffre.get(0).v);
+
+        System.out.println("\n--- 3. TEST DE DÉCHIFFREMENT ---");
+        String phraseDechiffree = crypto.decryptString(texteChiffre, keys.privateKey);
+        System.out.println("Message déchiffré : \"" + phraseDechiffree + "\"");
+
+        if (phraseOriginale.equals(phraseDechiffree)) {
+            System.out.println("\n[SUCCÈS TOTAL] pour l'algorithme LWE ");
+        } else {
+            System.out.println("\n[ERREUR] Le message a été altéré.");
+        }
+    }
+    /* public static void main(String[] args) {
         LWECrypto crypto = new LWECrypto();
 
         System.out.println("--- 1. GÉNÉRATION DES CLÉS ---");
@@ -138,7 +208,7 @@ public class LWECrypto {
         } else {
             System.out.println("\n[ÉCHEC] Le bruit était trop fort, la donnée a été corrompue.");
         }
-    }
+    }*/
     // Test rapide pour voir si ça ne plante pas
    /* public static void main(String[] args) {
         System.out.println("Initialisation du système Post-Quantique LWE...");
