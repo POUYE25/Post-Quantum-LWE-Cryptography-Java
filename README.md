@@ -19,7 +19,7 @@ Le cœur de la sécurité de LWE repose sur l'ajout d'une erreur (bruit gaussien
 * **Clé secrète ($s$) :** Un vecteur aléatoire $\in \mathbb{Z}_q^n$.
 * **Clé publique ($A, B$) :** Où $A$ est une matrice aléatoire $\in \mathbb{Z}_q^{m \times n}$ et $B$ est calculé selon l'équation :
     $$B = (A \times s) + e \pmod q$$
-    *(Où $e$ est un vecteur d'erreur tiré selon une distribution gaussienne discrète).*
+    *(Où e est un vecteur d'erreur tiré selon une distribution gaussienne discrète).*
 
 
 
